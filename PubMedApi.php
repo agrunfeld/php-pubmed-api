@@ -222,9 +222,9 @@ class PubMedApi
         return $data;
     }
 
-	protected function parseELinkXml($xml)
-	{
-		$data = array();
+    protected function parseELinkXml($xml)
+    {
+        $data = array();
         if (isset($xml->eLinkResult->LinkSet->LinkSet->IdUrlSet))
             foreach ($xml->eLinkResult->LinkSet->LinkSet->IdUrlSet as $link)
                 $data[] = array(
@@ -232,8 +232,8 @@ class PubMedApi
                     'iconurl'		=> (string) $link->ObjUrl->IconUrl,
                     'provider'		=> (string) $link->ObjUrl->Provider->Name
                 );
-		return $data;
-	}
+        return $data;
+    }
 
     private function getPmidsFromCache($term)
     {
@@ -250,8 +250,8 @@ class PubMedApi
         return array();
     }
 
-	private function queryUrl($url)
-	{		
+    private function queryUrl($url)
+    {		
         ini_set('user_agent', $_SERVER['HTTP_USER_AGENT']);
 
         $curl = curl_init();
@@ -271,8 +271,8 @@ class PubMedApi
         if (!$xml && $this->error = libxml_get_errors())
             return false;
 
-		return $xml;
-	}
+        return $xml;
+    }
 
     private function buildESearchUrl()
     {
