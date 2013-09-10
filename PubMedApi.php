@@ -8,24 +8,24 @@ include('Http.php');
 
 class PubMedApi
 {
-	public $term = '';
-	public $db = 'pubmed';
-	public $retmode = 'xml';
-	public $retmax = 10;                    // Max number of results to return
+    public $term = '';
+    public $db = 'pubmed';
+    public $retmode = 'xml';
+    public $retmax = 10;                    // Max number of results to return
     public $retstart = 0;                   // The search result number to start displaying data
-	public $count = 0;                      // Sets to the number of search results
-	public $exact_match = true;             // Exact match narrows the search results by wrapping in quotes
+    public $count = 0;                      // Sets to the number of search results
+    public $exact_match = true;             // Exact match narrows the search results by wrapping in quotes
 
-	public $use_cache = false;              // Save JSON formatted search results to a text file if TRUE
-	public $cache_dir = '';                 // Directory where cached results will be saved
-	public $cache_life = 604800;            // Caching time, in seconds, default 7 days
-	public $cache_file_hash = '';           // Sets to the md5 hash of the search term
+    public $use_cache = false;              // Save JSON formatted search results to a text file if TRUE
+    public $cache_dir = '';                 // Directory where cached results will be saved
+    public $cache_life = 604800;            // Caching time, in seconds, default 7 days
+    public $cache_file_hash = '';           // Sets to the md5 hash of the search term
 
     private $curl_timeout = 15;
     private $curl_site_url = '';
 
-	private $esearch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?';
-	private $efetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?';
+    private $esearch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?';
+    private $efetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?';
     private $elink = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?';
 
     function __construct($options=array())
@@ -56,7 +56,7 @@ class PubMedApi
         $results = $pubmed->parseEfetchXml($efetchResponse);
 
         if ($pubmed->use_cache)
-			$pubmed->cacheResults($results);
+            $pubmed->cacheResults($results);
 
         return $results;
     }
@@ -106,11 +106,11 @@ class PubMedApi
         if ($this->use_cache)
             return $this->getPmidsFromCache($this->term);
 
-		if ($this->exact_match)
-			$this->term = urlencode(sprintf('"%s"',$this->term));
+        if ($this->exact_match)
+            $this->term = urlencode(sprintf('"%s"',$this->term));
         else
-			$this->term = urlencode(trim($this->term));
-        
+            $this->term = urlencode(trim($this->term));
+
         return $this->queryUrl($this->buildESearchUrl());
     }
 
@@ -126,16 +126,16 @@ class PubMedApi
         return $this->queryUrl($this->buildELinkUrl($pmids));
     }
 
-	protected function cacheResults($results)
-	{
-		if ($this->term == '')
-			return;
+    protected function cacheResults($results)
+    {
+        if ($this->term == '')
+            return;
 
-		$this->cache_file_hash = md5($this->term);
+        $this->cache_file_hash = md5($this->term);
 
-		$fh = @fopen($this->cache_dir.'cache_'.$this->cache_file_hash.'_'.$this->retstart.'.json', 'wb');
-		if (!$fh)
-			die('Unable to write cache file to cache directory. \''.$this->cache_dir.'\'.');
+        $fh = @fopen($this->cache_dir.'cache_'.$this->cache_file_hash.'_'.$this->retstart.'.json', 'wb');
+        if (!$fh)
+            die('Unable to write cache file to cache directory. \''.$this->cache_dir.'\'.');
 
         $jsonData = array(
             'results' => $results,
@@ -145,8 +145,8 @@ class PubMedApi
         );
 
         fwrite($fh, json_encode($jsonData));
-		fclose($fh);
-	}
+        fclose($fh);
+    }
 
     protected function parseCount($xml)
     {
@@ -156,16 +156,16 @@ class PubMedApi
     protected function parsePmids($xml)
     {
         $pmids = array();
-		if (isset($xml->IdList->Id) && !empty($xml->IdList->Id))
-			foreach ($xml->IdList->children() as $id)
-				$pmids[] = (string)$id;
+            if (isset($xml->IdList->Id) && !empty($xml->IdList->Id))
+                foreach ($xml->IdList->children() as $id)
+                    $pmids[] = (string)$id;
         return $pmids;
     }
 
-	protected function parseEFetchXml($xml)
-	{
-		$data = array();
-		foreach ($xml->PubmedArticle as $art) {
+    protected function parseEFetchXml($xml)
+    {
+        $data = array();
+        foreach ($xml->PubmedArticle as $art) {
 
             $authors = array();
             if (isset($art->MedlineCitation->Article->AuthorList->Author)) {
@@ -218,9 +218,9 @@ class PubMedApi
                 'articleid'		=> implode(',',$articleid),
                 'keywords'		=> $keywords
             );
-		}
-		return $data;
-	}
+        }
+        return $data;
+    }
 
 	protected function parseELinkXml($xml)
 	{
@@ -274,37 +274,37 @@ class PubMedApi
 		return $xml;
 	}
 
-	private function buildESearchUrl()
-	{
-		$params = array(
-			'0' => 'db='.$this->db,
-			'1' => 'retmax='.$this->retmax,
-			'2' => 'retstart='.$this->retstart,
-			'3' => 'term='.stripslashes($this->term)
-		);
+    private function buildESearchUrl()
+    {
+        $params = array(
+            '0' => 'db='.$this->db,
+            '1' => 'retmax='.$this->retmax,
+            '2' => 'retstart='.$this->retstart,
+            '3' => 'term='.stripslashes($this->term)
+        );
 
-		return $this->esearch . implode('&',$params);
-	}
+        return $this->esearch . implode('&',$params);
+    }
 
     private function buildEFetchUrl($pmid)
-	{
-		$params = array(
-			'0' => 'db='.$this->db,
-			'1' => 'retmax='.$this->retmax,
-			'2' => 'retmode='.$this->retmode,
-			'3' => 'id='.(string)$pmid
-		);
-		return $this->efetch . implode('&', $params);
-	}
+    {
+        $params = array(
+            '0' => 'db='.$this->db,
+            '1' => 'retmax='.$this->retmax,
+            '2' => 'retmode='.$this->retmode,
+            '3' => 'id='.(string)$pmid
+        );
+        return $this->efetch . implode('&', $params);
+    }
 
     private function buildELinkUrl($pmid)
     {
         $params = array(
-			'0' => 'dbfrom='.$this->db,
-			'1' => 'id='.(string)$pmid,
-			'2' => 'cmd='.'prlinks'
+            '0' => 'dbfrom='.$this->db,
+            '1' => 'id='.(string)$pmid,
+            '2' => 'cmd='.'prlinks'
         );
-		return $this->elink . implode('&', $params);;
+        return $this->elink . implode('&', $params);;
     }
 }
 ?>
