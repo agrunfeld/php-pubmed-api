@@ -61,10 +61,19 @@ class PubMedApi
         return $results;
     }
 
+    public function requestEfetchData($pmid)
+    {
+        $this->pmids = $pmid;
+        $efetchResponse = $this->getEfetchXmlByPmids();
+        if (!$efetchResponse)
+            return Http::sendJsonResponse(500, $this->error);        
+        return $this->parseEfetchXml($efetchResponse);
+    }
+
     public function requestElinkData($pmid)
     {
         $this->pmids = $pmid;
-        $elinkResponse = $pubmed->getElinkXmlByPmids();
+        $elinkResponse = $this->getElinkXmlByPmids();
         if (!$elinkResponse)
             return Http::sendJsonResponse(500, $this->error);        
         return $this->parseElinkXml($elinkResponse);
