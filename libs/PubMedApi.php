@@ -125,13 +125,13 @@ class PubMedApi
 
     protected function getEfetchXmlByPmids()
     {
-        $pmids = implode(',', $this->pmids);
+        $pmids = (is_array($this->pmids)) ? implode(',', $this->pmids) : $this->pmids;
         return $this->queryUrl($this->buildEFetchUrl($pmids));
     }
 
     protected function getElinkXmlByPmids()
     {
-        $pmids = implode(',', $this->pmids);
+        $pmids = (is_array($this->pmids)) ? implode(',', $this->pmids) : $this->pmids;
         return $this->queryUrl($this->buildELinkUrl($pmids));
     }
 
