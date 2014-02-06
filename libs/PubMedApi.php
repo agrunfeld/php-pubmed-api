@@ -4,8 +4,6 @@
  * 
  */
 
-include('Http.php');
-
 class PubMedApi
 {
     public $term = '';
@@ -25,6 +23,7 @@ class PubMedApi
     private $curl_site_url = '';
 
     private $esearch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?';
+	private $esummary = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?';
     private $efetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?';
     private $elink = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?';
 
@@ -44,14 +43,14 @@ class PubMedApi
 
         $esearchResponse = $pubmed->getEsearchXmlByTerm();
         if (!$esearchResponse)
-            return Http::sendJsonResponse(500, $this->error);
+            throw new Exception($this->error);
 
         $pubmed->count = $pubmed->parseCount($esearchResponse);
         $pubmed->pmids = $pubmed->parsePmids($esearchResponse);
 
         $efetchResponse = $pubmed->getEfetchXmlByPmids();
         if (!$efetchResponse)
-            return Http::sendJsonResponse(500, $this->error);
+            throw new Exception($this->error);
 
         $results = $pubmed->parseEfetchXml($efetchResponse);
 
@@ -66,8 +65,17 @@ class PubMedApi
         $this->pmids = $pmid;
         $efetchResponse = $this->getEfetchXmlByPmids();
         if (!$efetchResponse)
-            return Http::sendJsonResponse(500, $this->error);        
+            throw new Exception($this->error);
         return $this->parseEfetchXml($efetchResponse);
+    }
+
+    public function requestEsummaryData($pmids)
+    {
+        $this->pmids = $pmids;
+        $esummaryResponse = $this->getEsummaryXmlByPmids();
+        if (!$esummaryResponse)
+            throw new Exception($this->error);
+        return $this->parseEsummaryXml($esummaryResponse);
     }
 
     public function requestElinkData($pmid)
@@ -75,7 +83,7 @@ class PubMedApi
         $this->pmids = $pmid;
         $elinkResponse = $this->getElinkXmlByPmids();
         if (!$elinkResponse)
-            return Http::sendJsonResponse(500, $this->error);        
+            throw new Exception($this->error);
         return $this->parseElinkXml($elinkResponse);
     }
 
@@ -84,7 +92,7 @@ class PubMedApi
         $term = '';
 
         if ($query !== null) {
-            $term = $query . '[All Fields]';
+            $term = $query;
 
             if ($author !== null)
                 $term .= ' AND ';
@@ -121,6 +129,12 @@ class PubMedApi
             $this->term = urlencode(trim($this->term));
 
         return $this->queryUrl($this->buildESearchUrl());
+    }
+
+    protected function getEsummaryXmlByPmids()
+    {
+        $pmids = (is_array($this->pmids)) ? implode(',', $this->pmids) : $this->pmids;
+        return $this->queryUrl($this->buildESummaryUrl($pmids));
     }
 
     protected function getEfetchXmlByPmids()
@@ -231,6 +245,19 @@ class PubMedApi
         return $data;
     }
 
+	protected function parseESummaryXml($xml)
+	{
+		$data = array();
+        // if (isset($xml->DocSum))
+        //     foreach ($xml->DocSum as $summary)
+        //         $data[] = array(
+        //             'url'			=> (string) $link->ObjUrl->Url,
+        //             'iconurl'		=> (string) $link->ObjUrl->IconUrl,
+        //             'provider'		=> (string) $link->ObjUrl->Provider->Name
+        //         );
+		return $data;
+	}
+
     protected function parseELinkXml($xml)
     {
         $data = array();
@@ -305,6 +332,17 @@ class PubMedApi
         );
         return $this->efetch . implode('&', $params);
     }
+
+    private function buildESummaryUrl($pmid)
+	{
+		$params = array(
+			'0' => 'db='.$this->db,
+			'1' => 'retmax='.$this->retmax,
+			'2' => 'retmode='.$this->retmode,
+			'3' => 'id='.(string)$pmid
+		);
+		return $this->esummary . implode('&', $params);
+	}
 
     private function buildELinkUrl($pmid)
     {
